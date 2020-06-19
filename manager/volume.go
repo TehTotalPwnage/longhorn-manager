@@ -248,6 +248,13 @@ func (m *VolumeManager) Create(name string, spec *types.VolumeSpec) (v *longhorn
 }
 
 func (m *VolumeManager) Delete(name string) error {
+	volume, err := m.ds.GetVolume(name)
+	if err != nil {
+		return errors.Wrapf(err, "could not get volume %v", name)
+	}
+	if volume.Status.State != types.VolumeStateDetached {
+		return fmt.Errorf("cannot delete volume %v while it is not detached", name)
+	}
 	if err := m.ds.DeleteVolume(name); err != nil {
 		return err
 	}
